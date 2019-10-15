@@ -16,9 +16,8 @@ import router from './router'
 import i18n from './lang' // Internationalization
 import './icons' // icon
 import './errorLog' // error log
-import './permission' // permission control
+import './permission' // router权限过滤
 
-import * as filters from './filters' // global filters
 // 引入字体库
 import { library } from '@fortawesome/fontawesome-svg-core'
 import { fas } from '@fortawesome/free-solid-svg-icons'
@@ -34,14 +33,22 @@ Vue.use(Element, {
   size: Cookies.get('size') || 'medium', // set element-ui default size
   i18n: (key, value) => i18n.t(key, value)
 })
+// 引入http工具
+import { default as HTTP } from './utils/http'
+Vue.prototype.$http = HTTP
 
-// register global utility filters.
-Object.keys(filters).forEach(key => {
-  Vue.filter(key, filters[key])
-})
+import querystring from 'querystring'
+Vue.prototype.$qs = querystring
+
 // 常量定义
 import Cnost from './utils/const'
 Vue.use(Cnost)
+// 全局过虑器
+import filters from './utils/filters'
+Vue.use(filters)
+// 工具类
+import Utils from './utils/utils'
+Vue.use(Utils)
 
 Vue.config.productionTip = false
 

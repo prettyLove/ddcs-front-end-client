@@ -6,7 +6,8 @@ export default {
     errorPages: 'Páginas de error',
     page401: '401',
     page404: '404',
-    errorLog: 'Registro de errores'
+    errorLog: 'Registro de errores',
+    PagePermission: 'permission page'
   },
   navbar: {
     logOut: 'Salir',

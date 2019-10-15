@@ -3,7 +3,8 @@ export default {
     dashboard: '首页',
     guide: '引导页',
     permission: '权限测试页',
-    icons: '图标'
+    icons: '图标',
+    pagePermission: '权限测试首页'
   },
   navbar: {
     logOut: '退出登录',
