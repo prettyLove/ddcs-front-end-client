@@ -19,6 +19,8 @@ import './icons' // icon
 import './errorLog' // error log
 import './permission' // router权限过滤
 
+import './assets/style/border.css'
+import './assets/style/common.css'
 // 引入字体库
 import { library } from '@fortawesome/fontawesome-svg-core'
 import { fas } from '@fortawesome/free-solid-svg-icons'
@@ -51,7 +53,10 @@ Vue.use(filters)
 import Utils from './utils/utils'
 Vue.use(Utils)
 
+
+
 Vue.config.productionTip = false
+
 
 new Vue({
   el: '#app',

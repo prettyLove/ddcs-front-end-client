@@ -1,5 +1,5 @@
 <template>
-    <h2>部门管理</h2>
+    <h2>字典管理</h2>
 </template>
 
 <script>

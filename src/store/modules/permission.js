@@ -1,61 +1,45 @@
-import { asyncRoutes, constantRoutes } from '@/router'
-
-/**
- * 通过meta.path判断是否与当前用户权限匹配
- * @param menus
- * @param route
- */
-function hasPermission(menus, route) {
-  for (let i = 0; i < menus.length; i++) {
-    if (menus[i].url === route.path) {
-      return true
-    }
-  }
-  return false
-}
-
-/**
- * 递归过滤异步路由表，返回符合用户角色权限的路由表
- * @param routes asyncRoutes
- * @param menus
- */
-export function filterAsyncRoutes(routes, menus) {
-  const res = []
-  routes.forEach(route => {
-    const tmp = { ...route }
-    if (hasPermission(menus, tmp)) {
-      if (tmp.children) {
-        tmp.children = filterAsyncRoutes(tmp.children, menus)
-      }
-      res.push(tmp)
-    }
-  })
-
-  return res
-}
+import { constantRoutes } from '../../router'
+/* Layout */
+import Layout from '@/views/layout/Layout'
 
 const permission = {
   state: {
-    routes: [],
-    addRoutes: []
+    routes: constantRoutes,
+    addRouters: []
   },
   mutations: {
-    SET_ROUTES: (state, routes) => {
-      state.addRoutes = routes
+    SET_ROUTERS: (state, routes) => {
+      state.addRouters = routes
       state.routes = constantRoutes.concat(routes)
     }
   },
   actions: {
-    // 传入从后台获取的权限菜单
-    GenerateRoutes({ commit }, menus) {
-      return new Promise(resolve => {
-        console.log('处理menu' + JSON.stringify(menus))
-        const accessedRoutes = filterAsyncRoutes(asyncRoutes, menus)
-        commit('SET_ROUTES', accessedRoutes)
-        resolve(accessedRoutes)
-      })
+    GenerateRoutes({ commit }, asyncRouter) {
+      commit('SET_ROUTERS', asyncRouter)
     }
   }
+}
+
+export const filterAsyncRouter = (routers) => { // 遍历后台传来的路由字符串，转换为组件对象
+  const accessedRouters = routers.filter(router => {
+    if (router.component) {
+      if (router.component === 'Layout') { // Layout组件特殊处理
+        router.component = Layout
+      } else {
+        const component = router.component
+        router.component = loadView(component)
+      }
+    }
+    if (router.children && router.children.length) {
+      router.children = filterAsyncRouter(router.children)
+    }
+    return true
+  })
+  return accessedRouters
+}
+
+export const loadView = (view) => { // 路由懒加载
+  return () => import(`@/views/${view}`)
 }
 
 export default permission

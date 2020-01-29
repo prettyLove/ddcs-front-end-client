@@ -1,62 +1,41 @@
-import { userLogout } from '../../api/login'
-import { removeToken } from '@/utils/auth'
+import { userLogin, userLogout, getUserByToken } from '../../api/login'
+import { getToken, setToken, removeToken } from '@/utils/auth'
 
 const user = {
   state: {
-    user: '',
-    status: '',
-    code: '',
-    token: '',
-    name: '',
-    avatar: '',
-    introduction: '',
+    token: getToken(),
+    user: {},
     roles: [],
-    sysMenus: [],
-    setting: {
-      articlePlatform: []
-    }
+    // 第一次加载菜单时用到
+    loadMenus: false
   },
 
   mutations: {
-    SET_CODE: (state, code) => {
-      state.code = code
-    },
     SET_TOKEN: (state, token) => {
       state.token = token
     },
-    SET_INTRODUCTION: (state, introduction) => {
-      state.introduction = introduction
-    },
-    SET_SETTING: (state, setting) => {
-      state.setting = setting
-    },
-    SET_STATUS: (state, status) => {
-      state.status = status
-    },
-    SET_NAME: (state, name) => {
-      state.name = name
-    },
-    SET_AVATAR: (state, avatar) => {
-      state.avatar = avatar
+    SET_USER: (state, user) => {
+      state.user = user
     },
     SET_ROLES: (state, roles) => {
       state.roles = roles
+    },
+    SET_LOAD_MENUS: (state, loadMenus) => {
+      state.loadMenus = loadMenus
     }
   },
 
   actions: {
-    // 获取用户信息by token
-    userInit({ commit, state }, userInfo) {
-      commit('SET_NAME', userInfo.userName)
-      commit('SET_TOKEN', userInfo.token)
-    },
-    // 登出
-    LogOut({ commit, state }) {
+    // 用户名登录
+    LoginByUser({ commit }, userInfo) {
       return new Promise((resolve, reject) => {
-        userLogout(state.token).then(() => {
-          commit('SET_TOKEN', '')
-          commit('SET_ROLES', [])
-          removeToken()
+        userLogin(userInfo).then(response => {
+          const data = response.data
+          commit('SET_TOKEN', data.accessToken)
+          setToken(response.data.accessToken)
+          setUserInfo(data.user, commit)
+          // 第一次加载菜单时用到， 具体见 src 目录下的 permission.js
+          commit('SET_LOAD_MENUS', true)
           resolve()
         }).catch(error => {
           reject(error)
@@ -64,15 +43,64 @@ const user = {
       })
     },
 
-    // 前端 登出
-    FedLogOut({ commit }) {
-      return new Promise(resolve => {
-        commit('SET_TOKEN', '')
-        removeToken()
-        resolve()
+    // 获取用户信息
+    // 获取用户信息
+    GetUserInfo({ commit }) {
+      return new Promise((resolve, reject) => {
+        getUserByToken().then(res => {
+          if (res.code != -1){
+            setUserInfo(res, commit)
+          }
+          resolve(res)
+        }).catch(error => {
+          reject(error)
+        })
+      })
+    },
+
+    // 登出
+    LogOut({ commit, state }) {
+      return new Promise((resolve, reject) => {
+        userLogout().then(() => {
+          commit('SET_TOKEN', '')
+          commit('SET_ROLES', [])
+          removeToken()
+          resolve()
+        }).catch(error => {
+          commit('SET_TOKEN', '')
+          commit('SET_ROLES', [])
+          removeToken()
+          reject(error)
+        })
+      })
+    },
+    // 登出
+    LogOutNoToken({ commit, state }) {
+      return new Promise((resolve, reject) => {
+          commit('SET_TOKEN', '')
+          commit('SET_ROLES', [])
+          removeToken()
+          resolve()
+      })
+    },
+
+    updateLoadMenus({ commit }) {
+      return new Promise((resolve, reject) => {
+        commit('SET_LOAD_MENUS', false)
       })
     }
   }
+}
+
+export const setUserInfo = (res, commit) => {
+  // 如果没有任何权限，则赋予一个默认的权限，避免请求死循环
+  if (res) {
+    commit('SET_ROLES', ['ROLE_SYSTEM_DEFAULT'])
+  }
+  // else {
+  //   commit('SET_ROLES', res.roles)
+  // }
+  commit('SET_USER', res)
 }
 
 export default user
